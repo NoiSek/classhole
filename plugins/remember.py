@@ -267,6 +267,10 @@ def question(inp, chan='', say=None, db=None, input=None, nick="", me=None, bot=
                 return (varreplace(filterinp, variables), me)
             elif filtername == "noreply":
                 return ""
+            elif filtername == "no!" and inp.group(0).startswith("!"):
+                return ""
+            elif filtername == "no?" and inp.group(0).startswith("?"):
+                return ""
             elif filtername == "pyexec":
                 preargs = ""
                 for i in variables.keys():
