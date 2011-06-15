@@ -370,12 +370,12 @@ def question(inp, chan='', say=None, db=None, input=None, nick="", me=None, bot=
         else:
             finaloutput(data, redir, redirto, input)
 
-    variables = {"chan": chan,
-                 "user": nick,
-                 "nick": input.conn.nick,
-                 "target": redirto,
-                 "inp": args,
-                 "word": word}
+    variables = {"chan": chan or "",
+                 "user": nick or "",
+                 "nick": input.conn.nick or "",
+                 "target": redirto or "",
+                 "inp": args or "",
+                 "word": word or ""}
     if mode == "-":   # information
         message = word + " is "
         local = db.execute("select nick from memory where chan=? and word=lower(?)", (chan, word)).fetchone()
