@@ -267,10 +267,12 @@ def question(inp, chan='', say=None, db=None, input=None, nick="", me=None, bot=
                 return (varreplace(filterinp, variables), me)
             elif filtername == "noreply":
                 return ""
-            elif filtername == "no!" and inp.group(0).startswith("!"):
-                return ""
-            elif filtername == "no?" and inp.group(0).startswith("?"):
-                return ""
+            elif len(filtername) == 3 and filtername.startswith("no"):
+	        if inp.group(0).startswith(filtername[2]):
+                    return ""
+		else:
+		    filterhistory.remove(orig)
+		    return filters([filterinp, setternick], variables, filterhistory)
             elif filtername == "pyexec":
                 preargs = ""
                 for i in variables.keys():
@@ -278,6 +280,7 @@ def question(inp, chan='', say=None, db=None, input=None, nick="", me=None, bot=
                 print preargs + filterinp
                 return filters([pyexec.python(preargs + filterinp), setternick], variables, filterhistory)
             elif filtername.startswith("locked"):
+		filterhistory.remove(orig)
                 return filters([filterinp, setternick], variables, filterhistory)
             cmd = cmdfilter_re.search(filtername)
             if cmd:
