@@ -382,6 +382,7 @@ def question(inp, chan='', say=None, db=None, input=None, nick="", me=None, bot=
                  "nick": input.conn.nick or "",
                  "target": redirto or "",
                  "inp": args or "",
+		 "ioru": args or nick,
                  "word": word or ""}
     if mode == "-":   # information
         message = word + " is "
