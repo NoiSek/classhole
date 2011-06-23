@@ -7,7 +7,6 @@ import sys
 re_lineends = re.compile(r'[\r\n]*')
 
 
-@hook.command
 def python(inp):
     ".python <prog> -- executes python code <prog>"
     inp = inp.replace("~~n", "adsfervbthbfhyujgyjugkikjgqwedawdfrefgdrgrdthg")

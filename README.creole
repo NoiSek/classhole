@@ -1,5 +1,7 @@
 = Skybot =
 
+Sari branch: this is a personality branch to give crow a twin with an entertaining personality. we'll see how it goes.
+
 ==Goals==
 * simplicity
 ** little boilerplate
