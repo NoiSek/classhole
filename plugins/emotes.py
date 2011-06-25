@@ -1,3 +1,5 @@
+#written by 303
+
 from util import hook
 import re
 import random
