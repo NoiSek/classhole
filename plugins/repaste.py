@@ -49,11 +49,9 @@ def scrape_pastebin(url):
 autorepastes = {}
 
 
-@hook.regex('(pastebin\.com)(/[^ ]+)')
+#@hook.regex('(pastebin\.com)(/[^ ]+)')
 @hook.regex('(mibpaste\.com)(/[^ ]+)')
 def autorepaste(inp, input=None, db=None, chan=None):
-    if "autoreply" in input.bot.config and not input.bot.config["autoreply"]:
-        return
     db_init(db)
     manual = input.db.execute("select manual from repaste where chan=?", (chan, )).fetchone()
     if manual and len(manual) and manual[0]:
@@ -147,19 +145,7 @@ def repaste(inp, input=None, db=None, isManual=True):
     db_init(db)
     if parts[0] == 'list':
         return " ".join(pasters.keys())
-    elif parts[0] == 'mode':
-        if len(parts) == 1:
-            return "mode <auto|manual>"
-        elif input.chandata.isop(input.userdata.nick) or input.user.isadmin(input.bot):
-            input.db.execute("replace into repaste(chan, manual) values(?, ?)", (input.chan, 1 if parts[1] == "manual" else 0))
-            input.db.commit()
-            return "repaste mode set to " + ("manual" if parts[1] == "manual" else "auto")
-        else:
-            input.notice("you don't have op nor admin")
 
-    manual = input.db.execute("select manual from repaste where chan=?", (input.chan, )).fetchone()
-    if (not (manual and len(manual) and (manual[0]))) and isManual:
-        return
 
     paster = paste_ubuntu
     args = {}
