@@ -26,23 +26,23 @@ answers = [g + "As I see it, yes",
         r + "Very doubtful"]
 nextresponsenumber = -1
 
-
 @hook.command
 @hook.command("8ball")
-def eightball(inp, say=None):
-    ".8ball <question> - ask the 8ball a question"
-    global nextresponsenumber
-    inp = inp.strip()
-    if re.match("[a-zA-Z0-9]", inp[-1]):
-        inp += "?"
-    if nextresponsenumber > 0:
-        nextresponsenumber = -1
-        return inp + " " + answers[nextresponsenumber]
+def eightball(inp, nick='', say=None):
+  ".8ball <question> - ask the 8ball a question"
+  global nextresponsenumber
+  inp = inp.strip()
+  if re.match("[a-zA-Z0-9]", inp[-1]):
+    inp += "?"
+  if nextresponsenumber > 0:
+    say("%s: %s %s" % (nick, inp, answers[nextresponsenumber]))
+    nextresponsenumber = -1
+  else:
     return inp + " " + random.choice(answers)
 
-
-@hook.command("8ballnooxt")
-def eightballnext(inp, say=None):
+@hook.command("8next")
+def eightballnext(inp, nick='', input=None, say=None):
+  if nick in input.bot.config["admins"]:
     global nextresponsenumber
     nextresponsenumber = int(inp.strip())
     say("next response will be #%d - %s" % (nextresponsenumber, answers[nextresponsenumber]))

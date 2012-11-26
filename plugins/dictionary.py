@@ -4,6 +4,7 @@ from util import hook, http
 
 
 @hook.command('u')
+@hook.command('ud')
 @hook.command
 def urban(inp):
     '''.u/.urban <phrase> -- looks up <phrase> on urbandictionary.com'''

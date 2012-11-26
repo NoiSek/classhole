@@ -1,10 +1,12 @@
 import urlparse
 
 from util import hook, http
+from random import choice
+import urllib2
 
 
 @hook.command
-def down(inp):
+def down(inp, say=None):
     '''.down <url> -- checks to see if the site is down'''
 
     if 'http://' not in inp:
@@ -12,9 +14,11 @@ def down(inp):
 
     inp = 'http://' + urlparse.urlparse(inp).netloc
 
-    # http://mail.python.org/pipermail/python-list/2006-December/589854.html
+    req = urllib2.Request(inp)
     try:
-        http.get(inp, get_method='HEAD')
-        return inp + ' seems to be up'
-    except http.URLError:
-        return inp + ' seems to be down'
+        resp = urllib2.urlopen(req)
+    except urllib2.URLError, e:
+        responses = ["was hacked by turks.", "is currently on fire, somewhere.", "was seized for loli.", "is at the mosque.", "is running on a toaster...", "doesn't know that it's supposed to show things.", "has some anxiety issues.", "has gone to the dentist!", "is in Tahiti.", "got lost on the way to Walmart?"]
+        say("Looks like %s %s" % (inp, choice(responses)))
+    else:
+        return inp + " is up."

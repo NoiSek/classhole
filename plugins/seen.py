@@ -23,27 +23,27 @@ def seeninput(paraml, input=None, db=None, bot=None):
 
 
 @hook.command
-def seen(inp, nick='', chan='', db=None, input=None):
+def seen(inp, nick='', chan='', db=None, input=None, say=None):
     ".seen <nick> -- Tell when a nickname was last in active in irc"
 
     if input.conn.nick.lower() == inp.lower():
         # user is looking for us, being a smartass
-        input.notice("I'm right here, need something?")
+        say("YES THIS IS DOG")
 
-    if inp.lower() == nick.lower():
-        input.notice("Yes, that's your nick ...")
+    elif inp.lower() == nick.lower():
+        say("That'd be you, dear.")
 
-    db_init(db)
-
-    last_seen = db.execute("select name, time, quote from seen where name"
-                           " like ? and chan = ?", (inp, chan)).fetchone()
-
-    if last_seen:
-        reltime = timesince.timesince(last_seen[1])
-        if last_seen[0] != inp.lower():  # for glob matching
-            inp = last_seen[0]
-        input.notice('%s was last seen %s ago saying: %s' % \
-                    (inp, reltime, last_seen[2]))
     else:
-        input.notice("User not in database")
-    #this gets abused
+        db_init(db)
+
+        last_seen = db.execute("select name, time, quote from seen where name"
+                               " like ? and chan = ?", (inp, chan)).fetchone()
+
+        if last_seen:
+            reltime = timesince.timesince(last_seen[1])
+            if last_seen[0] != inp.lower():  # for glob matching
+                inp = last_seen[0]
+            say('%s was last seen %s ago saying: %s' % \
+                        (inp, reltime, last_seen[2]))
+        else:
+            say("User not in database")

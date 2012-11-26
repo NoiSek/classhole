@@ -14,8 +14,15 @@ class Input(dict):
             chan = nick
 
         def say(msg):
-            if not msg: return 
-            conn.msg(chan, msg)
+            if not msg: return
+
+            channel_match = re.match(r"^(\#\S*) (.*)", msg, re.I)
+            if channel_match:
+                channel, message = channel_match.groups()
+                conn.msg(channel, message)
+                return
+
+            conn.msg(chan, msg) 
 
         def reply(msg):
             if not msg: return 
