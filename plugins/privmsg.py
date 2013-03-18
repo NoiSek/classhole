@@ -1,6 +1,6 @@
 from util import hook
 
 @hook.command
-def say(inp, say=None, input=None):
+def privmsg(inp, input=None, notice=None):
   if input.nick in input.bot.config["admins"]:
-    say(inp)
+    notice(inp, True)

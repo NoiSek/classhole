@@ -43,9 +43,18 @@ class Input(dict):
             if not msg: return 
             conn.msg(chan, "\x01%s %s\x01" % ("ACTION", msg))
 
-        def notice(msg):
+        def notice(msg, special=False):
             if not msg: return 
+
+            if special:
+                username_match = re.match(r"^(\S*) (.*)", msg, re.I)
+                if username_match:
+                    username, message = username_match.groups()
+                    conn.cmd('NOTICE', [username, message])
+                    return
+
             conn.cmd('NOTICE', [nick, msg])
+            
 
         dict.__init__(self, conn=conn, raw=raw, prefix=prefix, command=command,
                     params=params, nick=nick, user=user, host=host,
