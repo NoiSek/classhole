@@ -12,9 +12,10 @@ def add_quote(db, chan, nick, add_nick, msg):
     db.commit()
 
 
-def del_quote(db, chan, nick, add_nick, msg):
+def del_quote(db, chan, nick, msg):
     db.execute('''update quote set deleted = 1 where
-                  chan=? and lower(nick)=lower(?) and msg=msg''')
+                  chan=? and lower(nick)=lower(?) and msg=?''',
+                  (chan, nick, msg))
     db.commit()
 
 
@@ -37,7 +38,7 @@ def format_quote(q, num, n_quotes):
 
 @hook.command('q')
 @hook.command
-def quote(inp, nick='', chan='', db=None):
+def quote(inp, nick='', input=None, chan='', db=None):
     ".q/.quote [#chan] [nick] [#n]/.quote add <nick> <msg> -- gets " \
         "random or [#n]th quote by <nick> or from <#chan>/adds quote"
 
@@ -47,6 +48,7 @@ def quote(inp, nick='', chan='', db=None):
     db.commit()
 
     add = re.match(r"add[^\w@]+(\S+?)>?:?\s+(.*)", inp, re.I)
+    delete = re.match(r"delete[^\w@]+(\S+?)>?:?\s+(.*)", inp, re.I)
     retrieve = re.match(r"(\S+)(?:\s+#?(-?\d+))?$", inp)
     retrieve_chan = re.match(r"(#\S+)\s+(\S+)(?:\s+#?(-?\d+))?$", inp)
 
@@ -58,6 +60,21 @@ def quote(inp, nick='', chan='', db=None):
         except db.IntegrityError:
             return "message already stored, doing nothing."
         return "quote added."
+    elif delete:
+        if input.nick in input.bot.config["admins"]:
+            
+            channel, msg = delete.groups()
+            message_parse = re.match(r"^<(\S*)>\s(.*)$", msg)
+            nick, msg = message_parse.groups()
+            channel = "#" + channel
+
+            try:
+                del_quote(db, channel, nick, msg)
+                db.commit()
+            except db.IntegrityError:
+                return "Quote not found when deleting message, yo."
+
+        return
     elif retrieve:
         select, num = retrieve.groups()
 
