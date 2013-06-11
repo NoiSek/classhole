@@ -20,7 +20,7 @@ def format_data(exchange, data):
       data['return']['vol']['display']))
 
   elif(exchange == "bitpay"):
-    data = data[1]
+    data = data[0]
     return("Bitpay // Current: $%s" % data['rate'])
 
   elif(exchange == "bitstamp"):

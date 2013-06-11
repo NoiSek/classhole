@@ -40,7 +40,11 @@ def spotify(inp, say = None):
 
   # Return the track + data, or print 'No Results'
   if(track):
-    artist = track['artists'][0]['name']
+    if(len(track['artists']) > 1):
+      artist = "Various Artists"
+    else:
+      artist = track['artists'][0]['name']
+    
     track_name = track['name']
 
     # Generate HTTP Spotify URL using regex
