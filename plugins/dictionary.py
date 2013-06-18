@@ -7,18 +7,31 @@ from util import hook, http
 @hook.command('ud')
 @hook.command
 def urban(inp):
-    '''.u/.urban <phrase> -- looks up <phrase> on urbandictionary.com'''
+    '''.u/.urban <phrase> [#] -- looks up <phrase> with [#] definition on urbandictionary.com'''
+
+    args = inp.split(" ")
+
+    # Cycle through definitions, optionally
+    if(len(args) > 1):
+        index = int(args[1]) - 1
+    else:   
+        index = 0
 
     url = 'http://www.urbandictionary.com/define.php'
-    page = http.get_html(url, term=inp)
+    page = http.get_html(url, term=args[0])
     words = page.xpath("//td[@class='word']")
     defs = page.xpath("//div[@class='definition']")
 
     if not defs:
         return 'no definitions found'
 
-    out = words[0].text_content().strip() + ': ' + ' '.join(
-            defs[0].text_content().split())
+    # Compensate for the fact that UD almost always has a picture or video under the first definition
+    if(index > 0):
+        out = words[index + 1].text_content().strip() + ': ' + ' '.join(
+                defs[index].text_content().split())
+    else:
+        out = words[index].text_content().strip() + ': ' + ' '.join(
+                defs[index].text_content().split())
 
     if len(out) > 400:
         out = out[:out.rfind(' ', 0, 400)] + '...'

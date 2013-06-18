@@ -1,134 +1,111 @@
-"""
-twitter.py: written by Scaevolus 2009
-retrieves most recent tweets
-"""
-
 import random
 import re
+import json
+import urllib
+import urllib2
 from time import strptime, strftime
 
-from util import hook, http
+from util import hook
 
+def authenticate(api_key):
+  oauth_url = "https://api.twitter.com/oauth2/token"
+  authorization_string = "Basic %s" % api_key
 
-def unescape_xml(string):
-    # unescape the 5 chars that might be escaped in xml
+  headers = { 
+    "User-agent" : "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13", 
+    "Authorization" : authorization_string,
+    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+  }
+  parameters = { "grant_type" : "client_credentials" }
+  
+  request = urllib2.Request(oauth_url, urllib.urlencode(parameters), headers)
+  response = urllib2.urlopen(request).read()
+  response = json.loads(response)
 
-    # gratuitously functional
-    # return reduce(lambda x, y: x.replace(*y), (string,
-    #     zip('&gt; &lt; &apos; &quote; &amp'.split(), '> < \' " &'.split()))
+  return response['access_token']
 
-    # boring, normal
-    return string.replace('&gt;', '>').replace('&lt;', '<').replace('&apos;',
-                    "'").replace('&quote;', '"').replace('&amp;', '&')
+def get_data(url, bearer_token):
+  authorization_string = "Bearer %s" % bearer_token
 
-history = []
-history_max_size = 250
+  headers = { 
+    "User-agent" : "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13", 
+    "Authorization" : authorization_string,
+  }
+  
+  request = urllib2.Request(url, None, headers)
+  response = urllib2.urlopen(request).read()
+  response = json.loads(response)
 
+  return response
 
 @hook.command
-def twitter(inp):
-    ".twitter <user>/<user> <n>/<id>/#<hashtag>/@<user> -- gets last/<n>th "\
-    "tweet from <user>/gets tweet <id>/gets random tweet with #<hashtag>/"\
-    "gets replied tweet from @<user>"
+def twitter(inp, bot=None, say=None):
+  ".twitter <user> [n] / .twitter <id> / .twitter #<hashtag> / .twitter @<user> -- " \
+  "Returns Twitter statuses based on different queries."
 
-    def add_reply(reply_name, reply_id):
-        if len(history) == history_max_size:
-            history.pop()
-        history.insert(0, (reply_name, reply_id))
+  # Get API key from Bot config, warn otherwise
+  api_key = bot.config.get("api_keys", {}).get("twitter", None)
+  if api_key is None:
+    return "Error: Specify an API key in your bot config. See https://dev.twitter.com/docs for instructions."
 
-    def find_reply(reply_name):
-        for name, id in history:
-            if name == reply_name:
-                return id if id != -1 else name
+  # Prepare API URL's
+  base_url = 'https://api.twitter.com/1.1'
+  api_search = base_url + "/search/tweets.json"
+  api_timeline = base_url + "/statuses/user_timeline.json"
 
-    if inp[0] == '@':
-        reply_inp = find_reply(inp[1:])
-        if reply_inp == None:
-            return 'error: no replies to %s found' % inp
-        inp = reply_inp
+  # Set for later
+  searching_hashtag = False
+  index = 0
 
-    url = 'http://twitter.com'
-    getting_nth = False
-    getting_id = False
-    searching_hashtag = False
+  # What are we looking for?
+  user_id = re.match(r'^(\d+)\s(\d+)?$', inp)
+  username = re.match(r'^\w{1,15}$', inp, re.I)
+  username_incremented = re.match(r'^(\w{1,15})\s+(\d+)$', inp)
+  hashtag = re.match(r'^#\w+$', inp)
 
-    time = 'status/created_at'
-    text = 'status/text'
-    reply_name = 'status/in_reply_to_screen_name'
-    reply_id = 'status/in_reply_to_status_id'
-    reply_user = 'status/in_reply_to_user_id'
+  if user_id:
+    url = api_timeline + "?user_id=%s" % user_id.group(1)
+    index = user_id.group(2)
 
-    if re.match(r'^\d+$', inp):
-        getting_id = True
-        url += '/statuses/show/%s.xml' % inp
-        screen_name = 'user/screen_name'
-        time = 'created_at'
-        text = 'text'
-        reply_name = 'in_reply_to_screen_name'
-        reply_id = 'in_reply_to_status_id'
-        reply_user = 'in_reply_to_user_id'
-    elif re.match(r'^\w{1,15}$', inp):
-        url += '/users/show/%s.xml' % inp
-        screen_name = 'screen_name'
-    elif re.match(r'^\w{1,15}\s+\d+$', inp):
-        getting_nth = True
-        name, num = inp.split()
-        if int(num) > 3200:
-            return 'error: only supports up to the 3200th tweet'
-        url += '/statuses/user_timeline/%s.xml?count=1&page=%s' % (name, num)
-        screen_name = 'status/user/screen_name'
-    elif re.match(r'^#\w+$', inp):
-        url = 'http://search.twitter.com/search.atom?q=%23' + inp[1:]
-        searching_hashtag = True
-    else:
-        return 'error: invalid request'
+  elif username:
+    url = api_timeline + "?screen_name=%s" % inp
 
-    try:
-        tweet = http.get_xml(url)
-    except http.HTTPError, e:
-        errors = {400: 'bad request (ratelimited?)',
-                401: 'tweet is private',
-                403: 'tweet is private',
-                404: 'invalid user/id',
-                500: 'twitter is broken',
-                502: 'twitter is down ("getting upgraded")',
-                503: 'twitter is overloaded (lol, RoR)'}
-        if e.code == 404:
-            return 'error: invalid ' + ['username', 'tweet id'][getting_id]
-        if e.code in errors:
-            return 'error: ' + errors[e.code]
-        return 'error: unknown %s' % e.code
-    except http.URLerror, e:
-        return 'error: timeout'
+  elif username_incremented:
+    # Get just enough tweets to grab the requested one
+    count = 10
+    while count <= int(username_incremented.group(2)):
+      count += 10
 
-    if searching_hashtag:
-        ns = '{http://www.w3.org/2005/Atom}'
-        tweets = tweet.findall(ns + 'entry/' + ns + 'id')
-        if not tweets:
-            return 'error: hashtag not found'
-        id = random.choice(tweets).text
-        id = id[id.rfind(':') + 1:]
-        return twitter(id)
+    url = api_timeline + "?screen_name=%s&count=%i" % (username_incremented.group(1), count)
+    index = username_incremented.group(2)
 
-    if getting_nth:
-        if tweet.find('status') is None:
-            return 'error: user does not have that many tweets'
+  elif hashtag:
+    url = api_search + "?q=%23" + inp[1:]
+    searching_hashtag = True
 
-    time = tweet.find(time)
-    if time is None:
-        return 'error: user has no tweets'
+  else:
+    return 'error: invalid request'
 
-    reply_name = tweet.find(reply_name).text
-    reply_id = tweet.find(reply_id).text
-    reply_user = tweet.find(reply_user).text
-    if reply_name is not None and (reply_id is not None or
-            reply_user is not None):
-        add_reply(reply_name, reply_id or -1)
+  # Attempt to authenticate with Twitter using API key
+  bearer_token = authenticate(api_key)
 
-    time = strftime('%Y-%m-%d %H:%M:%S',
-             strptime(time.text,
-             '%a %b %d %H:%M:%S +0000 %Y'))
-    text = unescape_xml(tweet.find(text).text.replace('\n', ''))
-    screen_name = tweet.find(screen_name).text
+  # Attempt to query Twitter
+  data = get_data(url, bearer_token)
 
-    return "%s %s: %s" % (time, screen_name, text)
+  # Choose a random tweet from collection and print it if we're searching hashtags
+  if searching_hashtag:
+    tweet = random.choice(data['statuses'])
+    say("@%s: %s" % (tweet['user']['screen_name'], tweet['text']))
+
+  # Pick selected tweet and print
+  if index > 1:
+    index = int(index) - 1
+
+  tweet = data[index]
+  
+  username = tweet['user']['screen_name']
+  status = tweet['text']
+  date = strftime('%a, %b %d %l:%M %p', strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y'))
+
+
+  say("\x02@%s - %s\x02: %s" % (username, date, status))

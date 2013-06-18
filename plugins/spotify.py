@@ -1,4 +1,4 @@
-from util import hook
+from util import hook, http
 
 import urllib2
 import json
@@ -16,9 +16,10 @@ def get_data(url):
 
 def region_filter(data):
   tracks = data['tracks']
+  track_names = []
 
   for track in tracks:
-    if("US" in track['album']['availability']['territories']):
+    if("US" in track['album']['availability']['territories'] or "worldwide" in track['album']['availability']['territories']):
       return track
 
   return None
@@ -60,3 +61,15 @@ def spotify(inp, say = None):
 
   else:
     return "No Results"
+
+@hook.regex(r"(http://open\.spotify\.com/track/\S*)", re.I)
+def spotify_parse(inp, say=None):
+  url = inp.group(0)
+  response = http.get_html(url)
+  
+  title_parse = response.xpath("//h1[@itemprop='name']")
+  artist_parse = response.xpath("//h2/a")
+  title = title_parse[0].text_content()
+  artist = artist_parse[0].text_content()
+  
+  say("Spotify: %s - %s" % (artist, title))
