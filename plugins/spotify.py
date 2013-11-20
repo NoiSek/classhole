@@ -1,9 +1,6 @@
 from util import hook, http
 
-import urllib2
-import json
-import re
-
+import urllib2, json, re
 
 def get_data(url):
   headers = { 'User-agent' : 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13' }
@@ -78,10 +75,10 @@ def spotify_parse(inp, say=None):
 def spotify_parse_uri(inp, say=None):
   url = "http://open.spotify.com/track/%s" % inp.group(1)
   response = http.get_html(url)
-  
+
   title_parse = response.xpath("//h1[@itemprop='name']")
   artist_parse = response.xpath("//h2/a")
   title = title_parse[0].text_content()
   artist = artist_parse[0].text_content()
-  
+
   say("Spotify: %s - %s" % (artist, title))

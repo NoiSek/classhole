@@ -69,6 +69,7 @@ def showtells(inp, nick='', chan='', notice=None, db=None):
     db.commit()
 
 
+@hook.command('coldcall')
 @hook.command
 def tell(inp, nick='', chan='', db=None):
     ".tell <nick> <message> -- relay <message> to <nick> when <nick> is around"

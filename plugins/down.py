@@ -16,7 +16,7 @@ def down(inp, say=None):
 
     req = urllib2.Request(inp)
     try:
-        resp = urllib2.urlopen(req)
+        resp = urllib2.urlopen(req, timeout=5)
     except urllib2.URLError, e:
         responses = ["was hacked by the turks.", "is currently on fire, somewhere.", "was seized for loli.", "is making great contributions to our glorious dear leader.", "is running on a toaster...", "doesn't know that it's supposed to show things.", "has some anxiety issues.", "is playing cards with satan.", "is in Tahiti.", "got lost on the way to Walmart?"]
         say("Looks like %s %s" % (inp, choice(responses)))

@@ -91,49 +91,54 @@ def length(inp, nick='', chan='', db=None, say=None):
 
   epeen_length = measure_epeen(inp.lower(), db)
   
-  say("%i inches of hard earned glory." % epeen_length[0]) if epeen_length else say("%s is a sad, sad individual." % inp)
+  say("%i centimeters of hard earned glory." % epeen_length[0]) if epeen_length else say("%s is a sad, sad individual." % inp)
 
 @hook.command("epeen")
 def epeen(inp, nick='', chan='', db=None, say=None):
+  ".epeen length [user] / .epeen stroke [user] / .epeen render [user] - Displays the length of a given epeen, strokes, or renders to screen."
   args = inp.split(" ")
-  
-  if(args[0] == "length"):
-    if(len(args) == 2):
-      return "%i inches of hard earned glory." % measure_epeen(args[1].lower(), db)[0] \
-        if measure_epeen(args[1].lower(), db) else say("%s is a sad, sad individual." % args[1])
-    else:
-      return "%i inches of hard earned glory." % measure_epeen(nick.lower(), db)[0] \
-        if measure_epeen(nick, db) else say("You've got nothing, buddy.")
-  
-  elif(args[0] == "stroke"):
-    if(len(args) == 2):
-      last_time = db.execute("select time from epeen_lockout where nick=?", ([nick.lower()])).fetchone()[0]
+  if args[0]:
+    if(args[0] == "length"):
+      if(len(args) == 2):
+        return "%i centimeters of hard earned glory." % measure_epeen(args[1].lower(), db)[0] \
+          if measure_epeen(args[1].lower(), db) else say("%s is a sad, sad individual." % args[1])
+      else:
+        return "%i centimeters of hard earned glory." % measure_epeen(nick.lower(), db)[0] \
+          if measure_epeen(nick, db) else say("You've got nothing, buddy.")
+    
+    elif(args[0] == "stroke"):
+      if(len(args) == 2):
+        last_time = db.execute("select time from epeen_lockout where nick=?", ([nick.lower()])).fetchone()[0]
 
-      if(last_time):
-        if datetime.now() - datetime.fromtimestamp(last_time) < timedelta(days=1):
-          time_elapsed = timedelta(days=1) - (datetime.now() - datetime.fromtimestamp(last_time))
-          hours_elapsed, rem = divmod(time_elapsed.seconds, 3600)
-          say("%i hours remaining until you can stroke again." % hours_elapsed) 
+        if(last_time):
+          if datetime.now() - datetime.fromtimestamp(last_time) < timedelta(days=1):
+            time_elapsed = timedelta(days=1) - (datetime.now() - datetime.fromtimestamp(last_time))
+            hours_elapsed, rem = divmod(time_elapsed.seconds, 3600)
+            say("%i hours remaining until you can stroke again." % hours_elapsed) 
+          else:
+            massage_epeen(nick.lower(), args[1].lower(), db)
+            db.commit()
+            return "A++"
         else:
           massage_epeen(nick.lower(), args[1].lower(), db)
           db.commit()
           return "A++"
+
       else:
-        massage_epeen(nick.lower(), args[1].lower(), db)
-        db.commit()
-        return "A++"
+        return "What? ...yourself?"
+
+    elif(args[0] == "render"):
+      if(len(args) == 2):
+        return isgd("http://firefi.re/epeen/?length=%i" % measure_epeen(args[1].lower(), db)[0]) \
+        if measure_epeen(args[1].lower(), db) else say("%s has nothing to show downstairs." % args[1])
+
+      else:
+        return isgd("http://firefi.re/epeen/?length=%i" % measure_epeen(nick.lower(), db)[0]) \
+        if measure_epeen(nick.lower(), db) else say("You're all washed up, chump.")
 
     else:
-      return "What? ...yourself?"
-
-  elif(args[0] == "render"):
-    if(len(args) == 2):
-      return isgd("http://firefi.re/epeen/?length=%i" % measure_epeen(args[1].lower(), db)[0]) \
-      if measure_epeen(args[1].lower(), db) else say("%s has nothing to show downstairs." % args[1])
-
-    else:
-      return isgd("http://firefi.re/epeen/?length=%i" % measure_epeen(nick.lower(), db)[0]) \
-      if measure_epeen(nick.lower(), db) else say("You're all washed up, chump.")
+      return "%i centimeters of hard earned glory." % measure_epeen(args[0].lower(), db)[0] \
+          if measure_epeen(args[0].lower(), db) else say("%s is a sad, sad individual." % args[0])
 
 #@hook.command("droptables")
 #def droptables(inp, db=None):

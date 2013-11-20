@@ -44,7 +44,7 @@ def open(url, query_params=None, user_agent=None, post_data=None,
         query_params = {}
 
     if user_agent is None:
-        user_agent = ua_skybot
+        user_agent = ua_firefox
 
     query_params.update(kwargs)
 
@@ -56,6 +56,7 @@ def open(url, query_params=None, user_agent=None, post_data=None,
         request.get_method = lambda: get_method
 
     request.add_header('User-Agent', user_agent)
+    request.add_header('Content-Type', "text/html;charset=UTF-8")
 
     if cookies:
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(jar))

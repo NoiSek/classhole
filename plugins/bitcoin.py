@@ -27,6 +27,7 @@ def format_data(exchange, data):
     return("BitStamp // Current: $%s, High: $%s, Low: $%s, Volume: %.2f BTC" % (data['last'], data['high'], data['low'], \
       float(data['volume'])))
 
+@hook.command("btc", autohelp = False)
 @hook.command(autohelp = False)
 def bitcoin(inp, say = None):
   ".bitcoin <exchange> -- gets current exchange rate for bitcoins from several exchanges, default is MtGox. Supports MtGox, Bitpay, and BitStamp."
