@@ -40,8 +40,8 @@ def eightball(inp, nick='', say=None):
   else:
     return inp + " " + random.choice(answers)
 
-@hook.command("8next")
-def eightballnext(inp, nick='', input=None, say=None):
+@hook.command
+def eightnext(inp, nick='', input=None, say=None):
   if nick in input.bot.config["admins"]:
     global nextresponsenumber
     nextresponsenumber = int(inp.strip())
